@@ -22,10 +22,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </head>
 <body>
 
-
   <test-fixture id="trivialProgress">
     <template>
       <paper-slider></paper-slider>
+    </template>
+  </test-fixture>
+
+  <test-fixture id="complexSlider">
+    <template>
+      <paper-slider
+        snaps
+        min="240"
+        max="1920"
+        step="8"
+        enable-highlight
+        value="640">
+      </paper-slider>
     </template>
   </test-fixture>
 
@@ -41,6 +53,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         assert.equal(slider.min, 0);
         assert.equal(slider.max, 100);
         assert.equal(slider.value, 0);
+        assert.equal(slider.markers.length, 0);
+        assert.equal(Object.keys(slider.waypoints).length, 0);
+        assert.equal(slider.enableHighlight, false);
+        assert.equal(slider.showPlainMarkers, false);
       });
 
       test('set value', function(done) {
@@ -229,6 +245,238 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         slider.maxMarkers = 10;
         flush(function() {
           assert.equal(slider.markers.length, 7);
+          done();
+        });
+      });
+
+    });
+
+    suite('<paper-slider> markers and waypoints', function() {
+      var slider;
+
+      setup(function() {
+        slider = fixture('complexSlider');
+        slider.waypoints = {
+          '240':  { 'label': 'tiny' },
+          '480':  { 'icon': 'image:photo-size-select-small' },
+          '640':  { 'icon': 'image:photo-size-select-large' },
+          '960':  { 'label': 'native', 'orientation': 'top' },
+          '1280': { 'icon': 'image:photo-size-select-actual' },
+          '1440': { 'icon': 'icons:favorite', 'orientation': 'top' },
+          '1920': { 'label': 'huge' },
+        };
+      });
+
+      test('total markers', function(done) {
+        flush(function() {
+          assert.lengthOf(slider.markers, 211);
+          assert.lengthOf(Polymer.dom(slider.root).
+                       querySelectorAll('.marker'), 7);
+          done();
+        });
+      });
+
+      test('snaps to the correct marker on tap', function(done) {
+        flush(function() {
+          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
+
+          MockInteractions.tap(markers[0]);
+          assert.equal(slider.value, 240);
+          MockInteractions.tap(markers[1]);
+          assert.equal(slider.value, 480);
+          MockInteractions.tap(markers[2]);
+          assert.equal(slider.value, 640);
+          MockInteractions.tap(markers[3]);
+          assert.equal(slider.value, 960);
+          MockInteractions.tap(markers[4]);
+          assert.equal(slider.value, 1280);
+          MockInteractions.tap(markers[5]);
+          assert.equal(slider.value, 1440);
+          MockInteractions.tap(markers[6]);
+          assert.equal(slider.value, 1920);
+          done();
+        });
+      });
+
+      test('snaps to the correct marker on keypress', function(done) {
+        slider.value = 648;
+
+        flush(function() {
+          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], '.');
+          assert.equal(slider.value, 960);
+          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], '.');
+          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], '.');
+          assert.equal(slider.value, 1440);
+          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], '.');
+          assert.equal(slider.value, 1920);
+          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], '.');
+          assert.equal(slider.value, 1920);
+          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
+          assert.equal(slider.value, 1440);
+          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
+          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
+          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
+          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
+          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
+          assert.equal(slider.value, 240);
+          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
+          assert.equal(slider.value, 240);
+          done();
+        });
+      });
+
+      test('highlights markers on tap', function(done) {
+        flush(function() {
+          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
+
+          for (var i = 0; i < markers.length; i++) {
+            var marker = markers[i];
+            MockInteractions.tap(marker);
+            assert.isTrue(marker.classList.contains('highlight'));
+            for (var j = 0; j < markers.length; j++) {
+              if ( i === j ) { continue; }
+              var otherMarker = markers[j];
+              assert.isFalse(otherMarker.classList.contains('highlight'));
+            }
+          }
+
+          done();
+        });
+      });
+
+      test('highlights correct markers on keypress', function(done) {
+        flush(function() {
+          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
+          slider.value = 0;
+
+          for (var i = 0; i < markers.length; i++) {
+            var marker = markers[i];
+            assert.isTrue(marker.classList.contains('highlight'));
+            for (var j = 0; j < markers.length; j++) {
+              if ( i === j ) { continue; }
+              var otherMarker = markers[j];
+              assert.isFalse(otherMarker.classList.contains('highlight'));
+            }
+            MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], '.');
+          }
+
+          done();
+        });
+      });
+
+      test('highlights correct markers on value change', function(done) {
+        flush(function() {
+          var values = Object.keys(slider.waypoints);
+          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
+          var i = 0;
+
+          values.forEach(function(value) {
+            slider.value = value;
+            assert.isTrue(markers[i].classList.contains('highlight'));
+            for (var j = 0; j < markers.length; j++) {
+              if ( i === j ) { continue; }
+              var otherMarker = markers[j];
+              assert.isFalse(otherMarker.classList.contains('highlight'));
+            }
+            i++;
+          });
+
+          done();
+        });
+      });
+
+      test('highlights no markers if no marker values match', function(done) {
+        flush(function() {
+          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
+
+          slider.value = 648;
+
+          for (var i = 0; i < markers.length; i++) {
+            assert.isFalse(markers[i].classList.contains('highlight'));
+          }
+
+          done();
+        });
+      });
+
+      test('shows plain markers', function(done) {
+        slider.showPlainMarkers = true;
+
+        flush(function() {
+          var markers = Polymer.dom(slider.root).querySelectorAll('.invisible');
+          assert.lengthOf(markers, 0);
+          done();
+        });
+      });
+
+      test('hides plain markers', function(done) {
+        slider.showPlainMarkers = false;
+
+        flush(function() {
+          var markers = Polymer.dom(slider.root).querySelectorAll('.invisible');
+          assert.lengthOf(markers, 204);
+          done();
+        });
+      });
+
+      test('adds icons', function(done) {
+        flush(function() {
+          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
+          var i = 0;
+
+          Object.keys(slider.waypoints).forEach(function(key) {
+            var waypoint = slider.waypoints[key];
+            if (waypoint.icon) {
+              assert.equal(markers[i].tagName, 'IRON-ICON');
+              assert.equal(markers[i].icon, waypoint.icon);
+            }
+            else {
+              assert.notEqual(markers[i].tagName, 'IRON-ICON');
+            }
+            i++;
+          });
+
+          done();
+        });
+      });
+
+      test('adds labels', function(done) {
+        flush(function() {
+          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
+          var i = 0;
+
+          Object.keys(slider.waypoints).forEach(function(key) {
+            var waypoint = slider.waypoints[key];
+            if (waypoint.label) {
+              assert.equal(markers[i].tagName, 'SPAN');
+              assert.equal(markers[i].innerHTML, waypoint.label);
+            }
+            else {
+              assert.notEqual(markers[i].tagName, 'SPAN');
+            }
+            i++;
+          });
+
+          done();
+        });
+      });
+
+      test('places icons and labels on the top when asked', function(done) {
+        flush(function() {
+          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
+          var i = 0;
+
+          Object.keys(slider.waypoints).forEach(function(key) {
+            if (slider.waypoints[key].orientation &&
+                slider.waypoints[key].orientation === 'top') {
+              assert.isTrue(markers[i].classList.contains('top'));
+            }
+            else {
+              assert.isFalse(markers[i].classList.contains('top'));
+            }
+            i++;
+          });
+
           done();
         });
       });
