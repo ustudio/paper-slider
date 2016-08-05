@@ -1,6 +1,6 @@
 {
   "name": "paper-slider",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "A material design-style slider",
   "license": "http://polymer.github.io/LICENSE.txt",
   "authors": "The Polymer Authors",
@@ -13,7 +13,7 @@
   "main": "paper-slider.html",
   "repository": {
     "type": "git",
-    "url": "git://github.com/PolymerElements/paper-slider.git"
+    "url": "git://github.com/kfox/paper-slider.git#better-markers"
   },
   "ignore": [],
   "dependencies": {
