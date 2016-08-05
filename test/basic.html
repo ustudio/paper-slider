@@ -41,6 +41,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </template>
   </test-fixture>
 
+  <test-fixture id="plainMarkerSlider">
+    <template>
+      <paper-slider
+        snaps
+        min="240"
+        max="1920"
+        step="8"
+        show-plain-markers
+        value="640">
+      </paper-slider>
+    </template>
+  </test-fixture>
+
   <script>
     suite('<paper-slider>', function() {
       var slider;
@@ -253,8 +266,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     suite('<paper-slider> markers and waypoints', function() {
       var slider;
+      var markers;
 
-      setup(function() {
+      setup(function(done) {
         slider = fixture('complexSlider');
         slider.waypoints = {
           '240':  { 'label': 'tiny' },
@@ -265,220 +279,204 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           '1440': { 'icon': 'icons:favorite', 'orientation': 'top' },
           '1920': { 'label': 'huge' },
         };
+
+        flush(function() {
+          markers = Polymer.dom(slider.root).querySelectorAll('.marker');
+          done();
+        });
       });
 
       test('total markers', function(done) {
-        flush(function() {
-          assert.lengthOf(slider.markers, 211);
-          assert.lengthOf(Polymer.dom(slider.root).
-                       querySelectorAll('.marker'), 7);
-          done();
-        });
+        assert.lengthOf(slider.markers, 211);
+        assert.lengthOf(markers, 7);
+        done();
       });
 
-      test('snaps to the correct marker on tap', function(done) {
-        flush(function() {
-          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
+      test('jumps to the correct marker on tap', function(done) {
+        var values = Object.keys(slider.waypoints);
 
-          MockInteractions.tap(markers[0]);
-          assert.equal(slider.value, 240);
-          MockInteractions.tap(markers[1]);
-          assert.equal(slider.value, 480);
-          MockInteractions.tap(markers[2]);
-          assert.equal(slider.value, 640);
-          MockInteractions.tap(markers[3]);
-          assert.equal(slider.value, 960);
-          MockInteractions.tap(markers[4]);
-          assert.equal(slider.value, 1280);
-          MockInteractions.tap(markers[5]);
-          assert.equal(slider.value, 1440);
-          MockInteractions.tap(markers[6]);
-          assert.equal(slider.value, 1920);
-          done();
-        });
+        async.eachOfSeries(markers, function(marker, index, callback) {
+          var eventListener = function(event) {
+            slider.removeEventListener('change', eventListener);
+            assert.equal(slider.value, values[index]);
+            callback(null);
+          };
+
+          slider.addEventListener('change', eventListener);
+          MockInteractions.tap(marker);
+        }, done);
       });
 
-      test('snaps to the correct marker on keypress', function(done) {
-        slider.value = 648;
+      test('jumps to the next marker on keypress', function(done) {
+        var values = Object.keys(slider.waypoints);
+        slider.value = values.splice(0, 1);
 
-        flush(function() {
+        async.eachSeries(values, function(value, callback) {
+          var eventListener = function(event) {
+            slider.removeEventListener('change', eventListener);
+            assert.equal(slider.value, value);
+            callback(null);
+          };
+
+          slider.addEventListener('change', eventListener);
           MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], '.');
-          assert.equal(slider.value, 960);
-          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], '.');
-          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], '.');
-          assert.equal(slider.value, 1440);
-          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], '.');
-          assert.equal(slider.value, 1920);
-          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], '.');
-          assert.equal(slider.value, 1920);
+        }, done);
+      });
+
+      test('jumps to the previous marker on keypress', function(done) {
+        var values = Object.keys(slider.waypoints).reverse();
+        slider.value = values.splice(0, 1);
+
+        async.eachSeries(values, function(value, callback) {
+          var eventListener = function(event) {
+            slider.removeEventListener('change', eventListener);
+            assert.equal(slider.value, value);
+            callback(null);
+          };
+
+          slider.addEventListener('change', eventListener);
           MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
-          assert.equal(slider.value, 1440);
-          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
-          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
-          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
-          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
-          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
-          assert.equal(slider.value, 240);
-          MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], ',');
-          assert.equal(slider.value, 240);
-          done();
-        });
+        }, done);
       });
 
       test('highlights markers on tap', function(done) {
-        flush(function() {
-          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
-
-          for (var i = 0; i < markers.length; i++) {
-            var marker = markers[i];
-            MockInteractions.tap(marker);
+        async.eachOfSeries(markers, function(marker, index, callback) {
+          var eventListener = function(event) {
+            slider.removeEventListener('change', eventListener);
             assert.isTrue(marker.classList.contains('highlight'));
             for (var j = 0; j < markers.length; j++) {
-              if ( i === j ) { continue; }
+              if ( index === j ) { continue; }
               var otherMarker = markers[j];
               assert.isFalse(otherMarker.classList.contains('highlight'));
             }
-          }
+            callback(null);
+          };
 
-          done();
-        });
+          slider.addEventListener('change', eventListener);
+          MockInteractions.tap(marker);
+        }, done);
       });
 
       test('highlights correct markers on keypress', function(done) {
-        flush(function() {
-          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
-          slider.value = 0;
+        slider.value = slider.min;
 
-          for (var i = 0; i < markers.length; i++) {
-            var marker = markers[i];
+        async.eachOfSeries(markers, function(marker, index, callback) {
+          var eventListener = function(event) {
+            slider.removeEventListener('change', eventListener);
             assert.isTrue(marker.classList.contains('highlight'));
             for (var j = 0; j < markers.length; j++) {
-              if ( i === j ) { continue; }
+              if ( index === j ) { continue; }
               var otherMarker = markers[j];
               assert.isFalse(otherMarker.classList.contains('highlight'));
             }
+            callback(null);
+          };
+
+          slider.addEventListener('change', eventListener);
+          if (index > 0) {
             MockInteractions.pressAndReleaseKeyOn(slider, undefined, [], '.');
           }
-
-          done();
-        });
+          else {
+            slider.fire('change');
+          }
+        }, done);
       });
 
       test('highlights correct markers on value change', function(done) {
-        flush(function() {
-          var values = Object.keys(slider.waypoints);
-          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
-          var i = 0;
+        var values = Object.keys(slider.waypoints);
 
-          values.forEach(function(value) {
-            slider.value = value;
-            assert.isTrue(markers[i].classList.contains('highlight'));
+        async.eachOfSeries(values, function(value, index, callback) {
+          var eventListener = function(event) {
+            slider.removeEventListener('change', eventListener);
+            assert.isTrue(markers[index].classList.contains('highlight'));
             for (var j = 0; j < markers.length; j++) {
-              if ( i === j ) { continue; }
+              if ( index === j ) { continue; }
               var otherMarker = markers[j];
               assert.isFalse(otherMarker.classList.contains('highlight'));
             }
-            i++;
-          });
+            callback();
+          };
 
-          done();
-        });
+          slider.addEventListener('change', eventListener);
+          slider.value = value;
+          slider.fire('change');
+        }, done);
       });
 
       test('highlights no markers if no marker values match', function(done) {
-        flush(function() {
-          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
+        slider.value = 648;
 
-          slider.value = 648;
+        for (var i = 0; i < markers.length; i++) {
+          assert.isFalse(markers[i].classList.contains('highlight'));
+        }
 
-          for (var i = 0; i < markers.length; i++) {
-            assert.isFalse(markers[i].classList.contains('highlight'));
-          }
-
-          done();
-        });
-      });
-
-      test('shows plain markers', function(done) {
-        slider.showPlainMarkers = true;
-
-        flush(function() {
-          var markers = Polymer.dom(slider.root).querySelectorAll('.invisible');
-          assert.lengthOf(markers, 0);
-          done();
-        });
+        done();
       });
 
       test('hides plain markers', function(done) {
-        slider.showPlainMarkers = false;
+        var invisible = Polymer.dom(slider.root).querySelectorAll('.invisible');
+        assert.lengthOf(invisible, 204);
+        done();
+      });
 
-        flush(function() {
-          var markers = Polymer.dom(slider.root).querySelectorAll('.invisible');
-          assert.lengthOf(markers, 204);
-          done();
-        });
+      test('shows plain markers', function(done) {
+        slider = fixture('plainMarkerSlider');
+        var invisible = Polymer.dom(slider.root).querySelectorAll('.invisible');
+        assert.lengthOf(invisible, 0);
+        done();
       });
 
       test('adds icons', function(done) {
-        flush(function() {
-          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
-          var i = 0;
+        var i = 0;
 
-          Object.keys(slider.waypoints).forEach(function(key) {
-            var waypoint = slider.waypoints[key];
-            if (waypoint.icon) {
-              assert.equal(markers[i].tagName, 'IRON-ICON');
-              assert.equal(markers[i].icon, waypoint.icon);
-            }
-            else {
-              assert.notEqual(markers[i].tagName, 'IRON-ICON');
-            }
-            i++;
-          });
-
-          done();
+        Object.keys(slider.waypoints).forEach(function(key) {
+          var waypoint = slider.waypoints[key];
+          if (waypoint.icon) {
+            assert.equal(markers[i].tagName, 'IRON-ICON');
+            assert.equal(markers[i].icon, waypoint.icon);
+          }
+          else {
+            assert.notEqual(markers[i].tagName, 'IRON-ICON');
+          }
+          i++;
         });
+
+        done();
       });
 
       test('adds labels', function(done) {
-        flush(function() {
-          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
-          var i = 0;
+        var i = 0;
 
-          Object.keys(slider.waypoints).forEach(function(key) {
-            var waypoint = slider.waypoints[key];
-            if (waypoint.label) {
-              assert.equal(markers[i].tagName, 'SPAN');
-              assert.equal(markers[i].innerHTML, waypoint.label);
-            }
-            else {
-              assert.notEqual(markers[i].tagName, 'SPAN');
-            }
-            i++;
-          });
-
-          done();
+        Object.keys(slider.waypoints).forEach(function(key) {
+          var waypoint = slider.waypoints[key];
+          if (waypoint.label) {
+            assert.equal(markers[i].tagName, 'SPAN');
+            assert.equal(markers[i].innerHTML, waypoint.label);
+          }
+          else {
+            assert.notEqual(markers[i].tagName, 'SPAN');
+          }
+          i++;
         });
+
+        done();
       });
 
       test('places icons and labels on the top when asked', function(done) {
-        flush(function() {
-          var markers = Polymer.dom(slider.root).querySelectorAll('.marker');
-          var i = 0;
+        var i = 0;
 
-          Object.keys(slider.waypoints).forEach(function(key) {
-            if (slider.waypoints[key].orientation &&
-                slider.waypoints[key].orientation === 'top') {
-              assert.isTrue(markers[i].classList.contains('top'));
-            }
-            else {
-              assert.isFalse(markers[i].classList.contains('top'));
-            }
-            i++;
-          });
-
-          done();
+        Object.keys(slider.waypoints).forEach(function(key) {
+          if (slider.waypoints[key].orientation &&
+              slider.waypoints[key].orientation === 'top') {
+            assert.isTrue(markers[i].classList.contains('top'));
+          }
+          else {
+            assert.isFalse(markers[i].classList.contains('top'));
+          }
+          i++;
         });
+
+        done();
       });
 
     });
