@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../iron-form-element-behavior/iron-form-element-behavior.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
 <link rel="import" href="../iron-range-behavior/iron-range-behavior.html">
 <link rel="import" href="../paper-behaviors/paper-inky-focus-behavior.html">
 <link rel="import" href="../paper-input/paper-input.html">
@@ -60,10 +61,12 @@ Custom property | Description | Default
 `--paper-slider-marker-color` | The color of the markers | `--paper-grey-800`
 `--paper-slider-marker-height` | Height of the markers | `6px`
 `--paper-slider-marker-label-color` | The color of the marker labels | `black`
-`--paper-slider-marker-label-offset` | The x-axis offset of the marker labels | `-11px`
-`--paper-slider-marker-icon-offset` | The x-axis offset of the marker icons | `-12px`
 `--paper-slider-marker-icon-color` | The color of the marker icon | `black`
-`--paper-slider-marker-icon-highlight-color` | The color of the highlighted marker icon | `--paper-grey-500`
+`--paper-slider-marker-highlight-color` | The color of the highlighted marker icon | `--paper-grey-500`
+`--paper-slider-marker-top-icon-y-offset` | The y-offset of top icons | `-2.3em`
+`--paper-slider-marker-bottom-icon-y-offset` | The y-offset of bottom icons | `0.6em`
+`--paper-slider-marker-top-label-y-offset` | The y-offset of top labels | `-2em`
+`--paper-slider-marker-bottom-label-y-offset` | The y-offset of bottom labels | `--paper-grey-500`
 
 @group Paper Elements
 @element paper-slider
@@ -160,7 +163,7 @@ Custom property | Description | Default
       }
 
       .highlight {
-        color: var(--paper-slider-marker-icon-highlight-color, --paper-blue-700) !important;
+        color: var(--paper-slider-marker-highlight-color, --paper-blue-700) !important;
         -webkit-transition: color 0.3s ease-in;
         -moz-transition: color 0.3s ease-in;
         -o-transition: color 0.3s ease-in;
@@ -195,62 +198,62 @@ Custom property | Description | Default
 
       .slider-marker-label {
         @apply(--slider-marker-label-style);
-        -ms-transform: translate(var(--paper-slider-marker-label-offset, -11px), 10px);
-        -webkit-transform: translate(var(--paper-slider-marker-label-offset, -11px), 10px);
-        transform: translate(var(--paper-slider-marker-label-offset, -11px), 10px);
+        -ms-transform: translate(-50%, var(--paper-slider-marker-bottom-label-y-offset, 1em));
+        -webkit-transform: translate(-50%, var(--paper-slider-marker-bottom-label-y-offset, 1em));
+        transform: translate(-50%, var(--paper-slider-marker-bottom-label-y-offset, 1em));
       }
 
       .slider-marker-label.top {
         @apply(--slider-marker-label-style);
-        -ms-transform: translate(var(--paper-slider-marker-label-offset, -11px), -16px);
-        -webkit-transform: translate(var(--paper-slider-marker-label-offset, -11px), -16px);
-        transform: translate(var(--paper-slider-marker-label-offset, -11px), -16px);
+        -ms-transform: translate(-50%, var(--paper-slider-marker-top-label-y-offset, -2em));
+        -webkit-transform: translate(-50%, var(--paper-slider-marker-top-label-y-offset, -2em));
+        transform: translate(-50%, var(--paper-slider-marker-top-label-y-offset, -2em));
       }
 
       .slider-marker-icon {
         @apply(--slider-marker-icon-style);
-        -ms-transform: translate(var(--paper-slider-marker-icon-offset, -12px), 10px);
-        -webkit-transform: translate(var(--paper-slider-marker-icon-offset, -12px), 10px);
-        transform: translate(var(--paper-slider-marker-icon-offset, -12px), 10px);
+        -ms-transform: translate(-50%, var(--paper-slider-marker-bottom-icon-y-offset, 0.6em));
+        -webkit-transform: translate(-50%, var(--paper-slider-marker-bottom-icon-y-offset, 0.6em));
+        transform: translate(-50%, var(--paper-slider-marker-bottom-icon-y-offset, 0.6em));
       }
 
       .slider-marker-icon.top {
         @apply(--slider-marker-icon-style);
-        -ms-transform: translate(var(--paper-slider-marker-icon-offset, -12px), -28px);
-        -webkit-transform: translate(var(--paper-slider-marker-icon-offset, -12px), -28px);
-        transform: translate(var(--paper-slider-marker-icon-offset, -12px), -28px);
+        -ms-transform: translate(-50%, var(--paper-slider-marker-top-icon-y-offset, -2.3em));
+        -webkit-transform: translate(-50%, var(--paper-slider-marker-top-icon-y-offset, -2.3em));
+        transform: translate(-50%, var(--paper-slider-marker-top-icon-y-offset, -2.3em));
       }
 
       .slider-markers-label {
         @apply(--slider-marker-label-style);
         right: 0;
-        -ms-transform: translate(calc(var(--paper-slider-marker-label-offset, -11px) * -1), 10px);
-        -webkit-transform: translate(calc(var(--paper-slider-marker-label-offset, -11px) * -1), 10px);
-        transform: translate(calc(var(--paper-slider-marker-label-offset, -11px) * -1), 10px);
+        -ms-transform: translate(50%, var(--paper-slider-marker-bottom-label-y-offset, 1em));
+        -webkit-transform: translate(50%, var(--paper-slider-marker-bottom-label-y-offset, 1em));
+        transform: translate(50%, var(--paper-slider-marker-bottom-label-y-offset, 1em));
       }
 
       .slider-markers-label.top {
         @apply(--slider-marker-label-style);
         right: 0;
-        -ms-transform: translate(calc(var(--paper-slider-marker-label-offset, -11px) * -1), -16px);
-        -webkit-transform: translate(calc(var(--paper-slider-marker-label-offset, -11px) * -1), -16px);
-        transform: translate(calc(var(--paper-slider-marker-label-offset, -11px) * -1), -16px);
+        -ms-transform: translate(50%, var(--paper-slider-marker-top-label-y-offset, -2em));
+        -webkit-transform: translate(50%, var(--paper-slider-marker-top-label-y-offset, -2em));
+        transform: translate(50%, var(--paper-slider-marker-top-label-y-offset, -2em));
       }
 
       .slider-markers-icon {
         @apply(--slider-marker-icon-style);
         right: 0;
-        -ms-transform: translate(calc(var(--paper-slider-marker-icon-offset, -12px) * -1), 10px);
-        -webkit-transform: translate(calc(var(--paper-slider-marker-icon-offset, -12px) * -1), 10px);
-        transform: translate(calc(var(--paper-slider-marker-icon-offset, -12px) * -1), 10px);
+        -ms-transform: translate(50%, var(--paper-slider-marker-bottom-icon-y-offset, 0.6em));
+        -webkit-transform: translate(50%, var(--paper-slider-marker-bottom-icon-y-offset, 0.6em));
+        transform: translate(50%, var(--paper-slider-marker-bottom-icon-y-offset, 0.6em));
       }
 
       .slider-markers-icon.top {
         @apply(--slider-marker-icon-style);
         right: 0;
-        -ms-transform: translate(calc(var(--paper-slider-marker-icon-offset, -12px) * -1), -28px);
-        -webkit-transform: translate(calc(var(--paper-slider-marker-icon-offset, -12px) * -1), -28px);
-        transform: translate(calc(var(--paper-slider-marker-icon-offset, -12px) * -1), -28px);
+        -ms-transform: translate(50%, var(--paper-slider-marker-top-icon-y-offset, -2.3em));
+        -webkit-transform: translate(50%, var(--paper-slider-marker-top-icon-y-offset, -2.3em));
+        transform: translate(50%, var(--paper-slider-marker-top-icon-y-offset, -2.3em));
       }
 
       .slider-knob {
