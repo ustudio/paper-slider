@@ -267,10 +267,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     suite('<paper-slider> markers and waypoints', function() {
       var slider;
       var markers;
+      var min;
+      var max;
+      var step;
+      var totalMarkers;
 
       setup(function(done) {
         slider = fixture('complexSlider');
-        slider.waypoints = {
+        slider.waypoints = waypoints = {
           '240':  { 'label': 'tiny' },
           '480':  { 'icon': 'image:photo-size-select-small' },
           '640':  { 'icon': 'image:photo-size-select-large' },
@@ -280,26 +284,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           '1920': { 'label': 'huge' },
         };
 
+        min  = slider.min;
+        max  = slider.max;
+        step = slider.step;
+
+        totalMarkers = ((max - min) / step) + 1;
+
         flush(function() {
-          markers = Polymer.dom(slider.root).querySelectorAll('.marker');
+          visibleMarkers = Polymer.dom(slider.root).querySelectorAll('.marker');
           done();
         });
       });
 
-      test('total markers', function(done) {
-        assert.lengthOf(slider.markers, 211);
-        assert.lengthOf(markers, 7);
-        done();
+      test.only('total markers', function() {
+        assert.lengthOf(slider.markers, totalMarkers);
+        assert.lengthOf(visibleMarkers, Object.keys(waypoints).length);
       });
 
       test('jumps to the correct marker on tap', function(done) {
-        var values = Object.keys(slider.waypoints);
+        var values = Object.keys(waypoints);
 
-        async.eachOfSeries(markers, function(marker, index, callback) {
+        async.eachOfSeries(visibleMarkers, function(marker, index, next) {
           var eventListener = function(event) {
             slider.removeEventListener('change', eventListener);
             assert.equal(slider.value, values[index]);
-            callback(null);
+            next();
           };
 
           slider.addEventListener('change', eventListener);
@@ -308,14 +317,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       test('jumps to the next marker on keypress', function(done) {
-        var values = Object.keys(slider.waypoints);
+        var values = Object.keys(waypoints);
         slider.value = values.splice(0, 1);
 
-        async.eachSeries(values, function(value, callback) {
+        async.eachSeries(values, function(value, next) {
           var eventListener = function(event) {
             slider.removeEventListener('change', eventListener);
             assert.equal(slider.value, value);
-            callback(null);
+            next();
           };
 
           slider.addEventListener('change', eventListener);
@@ -324,14 +333,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       test('jumps to the previous marker on keypress', function(done) {
-        var values = Object.keys(slider.waypoints).reverse();
+        var values = Object.keys(waypoints).reverse();
         slider.value = values.splice(0, 1);
 
-        async.eachSeries(values, function(value, callback) {
+        async.eachSeries(values, function(value, next) {
           var eventListener = function(event) {
             slider.removeEventListener('change', eventListener);
             assert.equal(slider.value, value);
-            callback(null);
+            next();
           };
 
           slider.addEventListener('change', eventListener);
@@ -340,16 +349,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       test('highlights markers on tap', function(done) {
-        async.eachOfSeries(markers, function(marker, index, callback) {
+        async.eachOfSeries(visibleMarkers, function(marker, index, next) {
           var eventListener = function(event) {
             slider.removeEventListener('change', eventListener);
             assert.isTrue(marker.classList.contains('highlight'));
-            for (var j = 0; j < markers.length; j++) {
-              if ( index === j ) { continue; }
-              var otherMarker = markers[j];
-              assert.isFalse(otherMarker.classList.contains('highlight'));
-            }
-            callback(null);
+
+            markers = Polymer.dom(slider.root).querySelectorAll('.highlight');
+            assert.lengthOf(markers, 1);
+            next();
           };
 
           slider.addEventListener('change', eventListener);
@@ -360,16 +367,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       test('highlights correct markers on keypress', function(done) {
         slider.value = slider.min;
 
-        async.eachOfSeries(markers, function(marker, index, callback) {
+        async.eachOfSeries(visibleMarkers, function(marker, index, next) {
           var eventListener = function(event) {
             slider.removeEventListener('change', eventListener);
             assert.isTrue(marker.classList.contains('highlight'));
-            for (var j = 0; j < markers.length; j++) {
-              if ( index === j ) { continue; }
-              var otherMarker = markers[j];
-              assert.isFalse(otherMarker.classList.contains('highlight'));
-            }
-            callback(null);
+
+            markers = Polymer.dom(slider.root).querySelectorAll('.highlight');
+            assert.lengthOf(markers, 1);
+            next();
           };
 
           slider.addEventListener('change', eventListener);
@@ -383,18 +388,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       test('highlights correct markers on value change', function(done) {
-        var values = Object.keys(slider.waypoints);
+        var values = Object.keys(waypoints);
 
-        async.eachOfSeries(values, function(value, index, callback) {
+        async.eachOfSeries(values, function(value, index, next) {
           var eventListener = function(event) {
             slider.removeEventListener('change', eventListener);
-            assert.isTrue(markers[index].classList.contains('highlight'));
-            for (var j = 0; j < markers.length; j++) {
-              if ( index === j ) { continue; }
-              var otherMarker = markers[j];
-              assert.isFalse(otherMarker.classList.contains('highlight'));
-            }
-            callback();
+            assert.isTrue(visibleMarkers[index].classList.contains('highlight'));
+
+            markers = Polymer.dom(slider.root).querySelectorAll('.highlight');
+            assert.lengthOf(markers, 1);
+            next();
           };
 
           slider.addEventListener('change', eventListener);
@@ -403,80 +406,52 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }, done);
       });
 
-      test('highlights no markers if no marker values match', function(done) {
+      test('highlights no markers if no marker values match', function() {
         slider.value = 648;
-
-        for (var i = 0; i < markers.length; i++) {
-          assert.isFalse(markers[i].classList.contains('highlight'));
-        }
-
-        done();
+        markers = Polymer.dom(slider.root).querySelectorAll('.highlight');
+        assert.lengthOf(markers, 0);
       });
 
-      test('hides plain markers', function(done) {
+      test('hides plain markers', function() {
         var invisible = Polymer.dom(slider.root).querySelectorAll('.invisible');
-        assert.lengthOf(invisible, 204);
-        done();
+        assert.lengthOf(invisible, totalMarkers - Object.keys(waypoints).length);
       });
 
-      test('shows plain markers', function(done) {
+      test('shows plain markers', function() {
         slider = fixture('plainMarkerSlider');
         var invisible = Polymer.dom(slider.root).querySelectorAll('.invisible');
         assert.lengthOf(invisible, 0);
-        done();
       });
 
-      test('adds icons', function(done) {
-        var i = 0;
-
-        Object.keys(slider.waypoints).forEach(function(key) {
-          var waypoint = slider.waypoints[key];
+      test('adds icons', function() {
+        Object.keys(waypoints).forEach(function(key, index) {
+          var waypoint = waypoints[key];
           if (waypoint.icon) {
-            assert.equal(markers[i].tagName, 'IRON-ICON');
-            assert.equal(markers[i].icon, waypoint.icon);
+            assert.equal(visibleMarkers[index].tagName, 'IRON-ICON');
+            assert.equal(visibleMarkers[index].icon, waypoint.icon);
           }
           else {
-            assert.notEqual(markers[i].tagName, 'IRON-ICON');
+            assert.notEqual(visibleMarkers[index].tagName, 'IRON-ICON');
           }
-          i++;
         });
-
-        done();
       });
 
-      test('adds labels', function(done) {
-        var i = 0;
-
-        Object.keys(slider.waypoints).forEach(function(key) {
-          var waypoint = slider.waypoints[key];
-          if (waypoint.label) {
-            assert.equal(markers[i].tagName, 'SPAN');
-            assert.equal(markers[i].innerHTML, waypoint.label);
-          }
-          else {
-            assert.notEqual(markers[i].tagName, 'SPAN');
-          }
-          i++;
+      test('adds labels', function() {
+        Object.keys(waypoints).forEach(function(key, index) {
+          assert.equal(
+            visibleMarkers[index].tagName === 'SPAN',
+            visibleMarkers[index].innerHTML === waypoints[key].label
+          );
         });
-
-        done();
       });
 
-      test('places icons and labels on the top when asked', function(done) {
-        var i = 0;
-
-        Object.keys(slider.waypoints).forEach(function(key) {
-          if (slider.waypoints[key].orientation &&
-              slider.waypoints[key].orientation === 'top') {
-            assert.isTrue(markers[i].classList.contains('top'));
-          }
-          else {
-            assert.isFalse(markers[i].classList.contains('top'));
-          }
-          i++;
+      test('places icons and labels on the top when asked', function() {
+        Object.keys(waypoints).forEach(function(key, index) {
+          assert.equal(
+            visibleMarkers[index].classList.contains('top'),
+            waypoints[key].orientation === 'top'
+          );
         });
-
-        done();
       });
 
     });
