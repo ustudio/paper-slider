@@ -59,14 +59,13 @@ Custom property | Description | Default
 `--paper-slider-height` | Height of the progress bar | `2px`
 `--paper-slider-input` | Mixin applied to the input in editable mode | `{}`
 `--paper-slider-marker-color` | The color of the markers | `--paper-grey-800`
-`--paper-slider-marker-height` | Height of the markers | `6px`
 `--paper-slider-marker-label-color` | The color of the marker labels | `black`
-`--paper-slider-marker-icon-color` | The color of the marker icon | `black`
-`--paper-slider-marker-highlight-color` | The color of the highlighted marker icon | `--paper-grey-500`
+`--paper-slider-marker-icon-color` | The color of the marker icons | `black`
+`--paper-slider-marker-highlight-color` | The color of highlighted marker icons or labels | `--paper-grey-500`
 `--paper-slider-marker-top-icon-y-offset` | The y-offset of top icons | `-2.3em`
 `--paper-slider-marker-bottom-icon-y-offset` | The y-offset of bottom icons | `0.6em`
 `--paper-slider-marker-top-label-y-offset` | The y-offset of top labels | `-2em`
-`--paper-slider-marker-bottom-label-y-offset` | The y-offset of bottom labels | `--paper-grey-500`
+`--paper-slider-marker-bottom-label-y-offset` | The y-offset of bottom labels | `1em`
 
 @group Paper Elements
 @element paper-slider
@@ -574,23 +573,50 @@ Custom property | Description | Default
           readOnly: true
         },
 
+        /**
+         * An array of the markers representing each step
+         * along the slider. Each array value is an object,
+         * either empty (a plain marker), or containing
+         * a label or icon and possibly an orientation, e.g.
+         * "top" or "bottom" (default).
+         */
         markers: {
           type: Array,
           value: function () { return []; },
           notify: true
         },
 
+        /**
+         * Instead of defining every marker as an
+         * array of markers, you may instead specify
+         * an object that defines icons and/or labels
+         * that should appear along the slider.  The
+         * keys are the slider values and the key values
+         * are objects that specify the icon or label
+         * and the orientation, e.g. "top" or "bottom"
+         * (default).
+         */
         waypoints: {
           type: Object,
           value: function () { return {}; },
           notify: true
         },
 
+        /**
+         * Display markers along the slider, even when there
+         * is no associated label or icon for that marker.
+         * Note: This will also make the markers valid "stops"
+         * for the keyboard shortcuts, i.e. '<' and '>'.
+         */
         showPlainMarkers: {
           type: Boolean,
           value: false
         },
 
+        /**
+         * Highlight a marker label or icon when the slider
+         * value matches the marker value.
+         */
         enableHighlight: {
           type: Boolean,
           value: false
@@ -1063,7 +1089,7 @@ Custom property | Description | Default
      * Fired when the slider's immediateValue changes. Only occurs while the
      * user is dragging.
      *
-     * To detect changes to immediateValue that happen for any input (i.e.                                                          
+     * To detect changes to immediateValue that happen for any input (i.e.
      * dragging, tapping, clicking, etc.) listen for immediate-value-changed
      * instead.
      *
