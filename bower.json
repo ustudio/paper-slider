@@ -13,7 +13,7 @@
   "main": "paper-slider.html",
   "repository": {
     "type": "git",
-    "url": "git://github.com/kfox/paper-slider.git#better-markers"
+    "url": "git://github.com/ustudio/paper-slider.git#better-markers"
   },
   "ignore": [],
   "dependencies": {
