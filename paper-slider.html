@@ -1072,7 +1072,7 @@ Custom property | Description | Default
       _handleMarkerClick: function(e) {
         if (!this.disabled) {
           if (this.enableHighlight) { this._removeHighlight(); }
-          this.value = e.srcElement.value;
+          this.value = e.target.value;
           this.fire('change');
         }
       }
